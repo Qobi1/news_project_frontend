@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './index.css';
+import RandomNews from './RandomNews';
 
 interface NewsArticle {
   id: number;
@@ -26,6 +27,7 @@ const App: React.FC = () => {
     message: ''
   });
   const [newsData, setNewsData] = useState<NewsArticle[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,6 +58,14 @@ const App: React.FC = () => {
         setLoading(false);
       });
   }, []);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    fetch(`${backendUrl}/categories/`)
+      .then(res => res.json())
+      .then(data => setCategories(['Все', ...data]))
+      .catch(() => setCategories(['Все']));
+  }, [backendUrl]);
 
   useEffect(() => {
     // Check for article ID in URL
@@ -170,6 +180,37 @@ const App: React.FC = () => {
     return isNaN(date.getTime()) ? '' : date.toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
+  // Handle category click
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategory(category);
+    setArticlesToShow(8);
+    setLoading(true);
+    if (category === 'Все') {
+      fetch(`${backendUrl}/news/`)
+        .then(res => res.json())
+        .then(data => {
+          setNewsData(data.map(mapApiNewsToArticle));
+          setLoading(false);
+        })
+        .catch(e => {
+          setError(e.message);
+          setLoading(false);
+        });
+    } else {
+      fetch(`${backendUrl}/filter/?category=${encodeURIComponent(category)}`)
+        .then(res => res.json())
+        .then(data => {
+          console.log('Filtered news response:', data); // <-- Add this line
+          setNewsData(data.map(mapApiNewsToArticle));
+          setLoading(false);
+        })
+        .catch(e => {
+          setError(e.message);
+          setLoading(false);
+        });
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error && currentView === 'article') {
     return (
@@ -241,12 +282,10 @@ const App: React.FC = () => {
                   />
                 </div>
                 
-                <footer className="border-top pt-4 mt-5">
+                <footer className="border-top pt-4 mt-5" style={{borderTop: 'none'}}>
                   <div className="row">
                     <div className="col-md-6 text-md-end">
-                      <p className="text-muted mb-0">
-                        <small>© 2024 Новости. Все права защищены.</small>
-                      </p>
+                      {/* Removed copyright text as requested */}
                     </div>
                   </div>
                 </footer>
@@ -254,6 +293,9 @@ const App: React.FC = () => {
             </article>
           </div>
         </main>
+
+        {/* Recommended News Section */}
+        <RandomNews backendUrl={backendUrl} />
 
         {/* Footer */}
         <footer className="py-5">
@@ -446,6 +488,24 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
+          {/* Category Buttons after news list */}
+          <div className="row mt-4">
+            <div className="col-12 d-flex flex-wrap gap-2 justify-content-center">
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  className={`btn btn-outline-secondary btn-sm rounded-pill ${selectedCategory === cat ? 'active' : ''}`}
+                  style={{
+                    background: selectedCategory === cat ? '#e0e0e0' : '',
+                    fontWeight: selectedCategory === cat ? 'bold' : 'normal'
+                  }}
+                  onClick={() => handleCategoryClick(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
