@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './index.css';
 import RandomNews from './RandomNews';
+import SEOHead from './SEOHead';
+import { NewsArticleData } from './seo';
 
 interface NewsArticle {
   id: number;
@@ -31,7 +33,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const backendUrl = 'http://localhost:8000';
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
   function mapApiNewsToArticle(apiNews: any): NewsArticle {
     return {
@@ -46,12 +48,17 @@ const App: React.FC = () => {
     };
   }
 
+  // State to track current article data for SEO
+  const [currentArticleData, setCurrentArticleData] = useState<NewsArticleData | null>(null);
+
   useEffect(() => {
     fetch(`${backendUrl}/news/`)
       .then(res => res.json())
       .then(data => {
         setNewsData(data.map(mapApiNewsToArticle));
         setLoading(false);
+        // Reset article data for home page
+        setCurrentArticleData(null);
       })
       .catch(e => {
         setError(e.message);
@@ -88,12 +95,17 @@ const App: React.FC = () => {
           setCurrentArticle(mapApiNewsToArticle(fixedApiNews));
           setCurrentView('article');
           setLoading(false);
+          
+          // Set article data for SEO
+          setCurrentArticleData(fixedApiNews as NewsArticleData);
         })
         .catch((e) => {
           setError(e.message || 'Ошибка загрузки статьи');
           setCurrentArticle(null);
           setCurrentView('home');
           setLoading(false);
+          // Reset article data on error
+          setCurrentArticleData(null);
         });
     }
   }, []);
@@ -116,12 +128,17 @@ const App: React.FC = () => {
         setCurrentView('article');
         setLoading(false);
         window.scrollTo(0, 0);
+        
+        // Set article data for SEO
+        setCurrentArticleData(fixedApiNews as NewsArticleData);
       })
       .catch((e) => {
         setError(e.message || 'Ошибка загрузки статьи');
         setCurrentArticle(null);
         setCurrentView('home');
         setLoading(false);
+        // Reset article data on error
+        setCurrentArticleData(null);
       });
   };
 
@@ -131,6 +148,9 @@ const App: React.FC = () => {
     setCurrentView('home');
     setCurrentArticle(null);
     window.scrollTo(0, 0);
+    
+    // Reset article data for SEO
+    setCurrentArticleData(null);
   };
 
   const handleLoadMore = () => {
@@ -214,18 +234,22 @@ const App: React.FC = () => {
   if (loading) return <div>Loading...</div>;
   if (error && currentView === 'article') {
     return (
-      <div className="container py-5 text-center">
-        <h2 className="mb-4 text-danger">{error}</h2>
-        <button className="btn btn-primary" onClick={handleBackToHome}>
-          Назад на главную
-        </button>
-      </div>
+      <>
+        <SEOHead isArticle={false} />
+        <div className="container py-5 text-center">
+          <h2 className="mb-4 text-danger">{error}</h2>
+          <button className="btn btn-primary" onClick={handleBackToHome}>
+            Назад на главную
+          </button>
+        </div>
+      </>
     );
   }
 
   if (currentView === 'article' && currentArticle) {
     return (
       <>
+        <SEOHead article={currentArticleData} isArticle={true} />
         {/* Navigation for Article Page */}
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow">
           <div className="container">
@@ -360,6 +384,7 @@ const App: React.FC = () => {
 
   return (
     <>
+      <SEOHead isArticle={false} />
       {/* Navigation */}
       <nav className="navbar navbar-expand-lg sticky-top shadow">
         <div className="container d-flex align-items-center justify-content-between">
