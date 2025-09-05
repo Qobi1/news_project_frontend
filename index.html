@@ -34,6 +34,114 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
     
+    <!-- Immediate Meta Tags Script - Runs before any other JavaScript -->
+    <script>
+      (function() {
+        'use strict';
+        
+        // Get URL parameters immediately
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+        
+        // Helper function to update or create meta tags
+        function updateMetaTag(attribute, name, content) {
+          const selector = 'meta[' + attribute + '="' + name + '"]';
+          let meta = document.querySelector(selector);
+          
+          if (!meta) {
+            meta = document.createElement('meta');
+            meta.setAttribute(attribute, name);
+            document.head.appendChild(meta);
+          }
+          
+          meta.setAttribute('content', content);
+        }
+        
+        // Helper function to update or create link tags
+        function updateLinkTag(rel, href) {
+          let link = document.querySelector('link[rel="' + rel + '"]');
+          
+          if (!link) {
+            link = document.createElement('link');
+            link.setAttribute('rel', rel);
+            document.head.appendChild(link);
+          }
+          
+          link.setAttribute('href', href);
+        }
+        
+        if (articleId) {
+          // Set meta tags for article page
+          const title = 'Статья ' + articleId + ' — Новости Иркутска';
+          const description = 'Читайте актуальные новости и события Иркутска. Подробная информация о происшествиях, мероприятиях и важных событиях региона.';
+          const url = window.location.origin + '/?id=' + articleId;
+          
+          // Update title immediately
+          document.title = title;
+          
+          // Update meta tags immediately
+          updateMetaTag('name', 'description', description);
+          updateMetaTag('name', 'keywords', 'новости иркутска, события иркутской области, статья, иркутск');
+          updateMetaTag('name', 'author', 'Новости Иркутска');
+          
+          // Update canonical URL
+          updateLinkTag('canonical', url);
+          
+          // Update Open Graph tags
+          updateMetaTag('property', 'og:url', url);
+          updateMetaTag('property', 'og:type', 'article');
+          updateMetaTag('property', 'og:site_name', 'Новости Иркутска');
+          updateMetaTag('property', 'og:locale', 'ru_RU');
+          updateMetaTag('property', 'og:title', title);
+          updateMetaTag('property', 'og:description', description);
+          updateMetaTag('property', 'og:image', '/api/placeholder/1200/630');
+          updateMetaTag('property', 'og:image:width', '1200');
+          updateMetaTag('property', 'og:image:height', '630');
+          
+          // Update Twitter Card tags
+          updateMetaTag('name', 'twitter:card', 'summary_large_image');
+          updateMetaTag('name', 'twitter:title', title);
+          updateMetaTag('name', 'twitter:description', description);
+          updateMetaTag('name', 'twitter:image', '/api/placeholder/1200/630');
+          
+        } else {
+          // Set default meta tags for home page (already set in HTML)
+          // Just ensure they're properly set
+          const title = 'Новости Иркутска - Последние новости и события';
+          const description = 'Актуальные новости Иркутска и Иркутской области. События, мероприятия, происшествия и важные новости региона.';
+          const url = window.location.origin;
+          
+          // Update title
+          document.title = title;
+          
+          // Update meta tags
+          updateMetaTag('name', 'description', description);
+          updateMetaTag('name', 'keywords', 'новости иркутска, события иркутской области, последние новости, иркутск');
+          updateMetaTag('name', 'author', 'Новости Иркутска');
+          
+          // Update canonical URL
+          updateLinkTag('canonical', url);
+          
+          // Update Open Graph tags
+          updateMetaTag('property', 'og:url', url);
+          updateMetaTag('property', 'og:type', 'website');
+          updateMetaTag('property', 'og:site_name', 'Новости Иркутска');
+          updateMetaTag('property', 'og:locale', 'ru_RU');
+          updateMetaTag('property', 'og:title', title);
+          updateMetaTag('property', 'og:description', description);
+          updateMetaTag('property', 'og:image', '/api/placeholder/1200/630');
+          updateMetaTag('property', 'og:image:width', '1200');
+          updateMetaTag('property', 'og:image:height', '630');
+          
+          // Update Twitter Card tags
+          updateMetaTag('name', 'twitter:card', 'summary_large_image');
+          updateMetaTag('name', 'twitter:title', title);
+          updateMetaTag('name', 'twitter:description', description);
+          updateMetaTag('name', 'twitter:image', '/api/placeholder/1200/630');
+        }
+      })();
+    </script>
+    
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->

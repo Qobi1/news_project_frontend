@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Tags Verification Test</title>
+    <script>
+        // Test the inline meta tags script
+        function testMetaTags() {
+            console.log('=== Meta Tags Verification Test ===');
+            
+            // Test URL parameter detection
+            const urlParams = new URLSearchParams(window.location.search);
+            const articleId = urlParams.get('id');
+            console.log('Article ID from URL:', articleId);
+            
+            // Test title
+            console.log('Current title:', document.title);
+            
+            // Test meta description
+            const metaDesc = document.querySelector('meta[name="description"]');
+            console.log('Meta description:', metaDesc ? metaDesc.getAttribute('content') : 'Not found');
+            
+            // Test Open Graph title
+            const ogTitle = document.querySelector('meta[property="og:title"]');
+            console.log('OG Title:', ogTitle ? ogTitle.getAttribute('content') : 'Not found');
+            
+            // Test Twitter title
+            const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+            console.log('Twitter Title:', twitterTitle ? twitterTitle.getAttribute('content') : 'Not found');
+            
+            // Test canonical URL
+            const canonical = document.querySelector('link[rel="canonical"]');
+            console.log('Canonical URL:', canonical ? canonical.getAttribute('href') : 'Not found');
+            
+            // Test JSON-LD
+            const jsonLd = document.querySelector('script[type="application/ld+json"]');
+            console.log('JSON-LD found:', jsonLd ? 'Yes' : 'No');
+            
+            console.log('=== Test Complete ===');
+        }
+        
+        // Run test when page loads
+        window.addEventListener('load', testMetaTags);
+        
+        // Also run immediately
+        testMetaTags();
+    </script>
+</head>
+<body>
+    <h1>Meta Tags Verification Test</h1>
+    <p>Open browser dev tools and check the console for test results.</p>
+    
+    <h2>Test URLs:</h2>
+    <ul>
+        <li><a href="?id=1">Article 1</a></li>
+        <li><a href="?id=2">Article 2</a></li>
+        <li><a href="?id=123">Article 123</a></li>
+        <li><a href="/">Home Page</a></li>
+    </ul>
+    
+    <h2>Current Page Info:</h2>
+    <p><strong>URL:</strong> <span id="current-url"></span></p>
+    <p><strong>Title:</strong> <span id="current-title"></span></p>
+    <p><strong>Meta Description:</strong> <span id="meta-description"></span></p>
+    <p><strong>OG Title:</strong> <span id="og-title"></span></p>
+    <p><strong>Twitter Title:</strong> <span id="twitter-title"></span></p>
+    <p><strong>Canonical URL:</strong> <span id="canonical-url"></span></p>
+    
+    <script>
+        // Update display
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('current-title').textContent = document.title;
+        
+        const metaDesc = document.querySelector('meta[name="description"]');
+        document.getElementById('meta-description').textContent = metaDesc ? metaDesc.getAttribute('content') : 'Not found';
+        
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        document.getElementById('og-title').textContent = ogTitle ? ogTitle.getAttribute('content') : 'Not found';
+        
+        const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+        document.getElementById('twitter-title').textContent = twitterTitle ? twitterTitle.getAttribute('content') : 'Not found';
+        
+        const canonical = document.querySelector('link[rel="canonical"]');
+        document.getElementById('canonical-url').textContent = canonical ? canonical.getAttribute('href') : 'Not found';
+    </script>
+</body>
+</html>

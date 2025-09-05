@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './index.css';
 import RandomNews from './RandomNews';
 import SEOHead from './SEOHead';
-import { NewsArticleData } from './seo';
+import { NewsArticleData, EventData } from './seo';
+import { updateMetaTagsForArticle } from './utils/enhancedMetaTags';
 
 interface NewsArticle {
   id: number;
@@ -49,7 +50,7 @@ const App: React.FC = () => {
   }
 
   // State to track current article data for SEO
-  const [currentArticleData, setCurrentArticleData] = useState<NewsArticleData | null>(null);
+  const [currentArticleData, setCurrentArticleData] = useState<NewsArticleData | EventData | null>(null);
 
   useEffect(() => {
     fetch(`${backendUrl}/news/`)
@@ -98,6 +99,9 @@ const App: React.FC = () => {
           
           // Set article data for SEO
           setCurrentArticleData(fixedApiNews as NewsArticleData);
+          
+          // Update meta tags with real article data
+          updateMetaTagsForArticle(fixedApiNews);
         })
         .catch((e) => {
           setError(e.message || 'Ошибка загрузки статьи');
@@ -131,6 +135,9 @@ const App: React.FC = () => {
         
         // Set article data for SEO
         setCurrentArticleData(fixedApiNews as NewsArticleData);
+        
+        // Update meta tags with real article data
+        updateMetaTagsForArticle(fixedApiNews);
       })
       .catch((e) => {
         setError(e.message || 'Ошибка загрузки статьи');

@@ -5,21 +5,24 @@ import {
   removeJSONLD, 
   newsArticleToSEOData, 
   generateNewsArticleJSONLD,
+  generateEventJSONLD,
   generateWebsiteJSONLD,
   generateBreadcrumbJSONLD,
+  isEventContent,
   defaultSEO,
-  NewsArticleData
+  NewsArticleData,
+  EventData
 } from './seo';
 
 interface SEOHeadProps {
-  article?: NewsArticleData | null;
+  article?: NewsArticleData | EventData | null;
   isArticle?: boolean;
 }
 
 const SEOHead: React.FC<SEOHeadProps> = ({ article, isArticle = false }) => {
   useEffect(() => {
     if (isArticle && article) {
-      // Update SEO for news article
+      // Update SEO for news article or event
       const seoData = newsArticleToSEOData(article, window.location.origin);
       
       // Update basic meta tags
@@ -27,11 +30,21 @@ const SEOHead: React.FC<SEOHeadProps> = ({ article, isArticle = false }) => {
       
       // Remove existing JSON-LD scripts
       removeJSONLD('news-article-jsonld');
+      removeJSONLD('event-jsonld');
       removeJSONLD('breadcrumb-jsonld');
       
-      // Add news article JSON-LD
-      const articleJsonLd = generateNewsArticleJSONLD(article, window.location.origin);
-      addJSONLD(articleJsonLd, 'news-article-jsonld');
+      // Determine if this is event content and generate appropriate JSON-LD
+      const isEvent = isEventContent(article);
+      
+      if (isEvent) {
+        // Add event JSON-LD
+        const eventJsonLd = generateEventJSONLD(article as EventData, window.location.origin);
+        addJSONLD(eventJsonLd, 'event-jsonld');
+      } else {
+        // Add news article JSON-LD
+        const articleJsonLd = generateNewsArticleJSONLD(article, window.location.origin);
+        addJSONLD(articleJsonLd, 'news-article-jsonld');
+      }
       
       // Add breadcrumb JSON-LD
       const breadcrumbs = [
@@ -47,6 +60,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({ article, isArticle = false }) => {
       
       // Remove article-specific JSON-LD
       removeJSONLD('news-article-jsonld');
+      removeJSONLD('event-jsonld');
       removeJSONLD('breadcrumb-jsonld');
       
       // Add website JSON-LD

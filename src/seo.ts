@@ -37,6 +37,27 @@ export interface NewsArticleData {
   category: string;
 }
 
+export interface EventData extends NewsArticleData {
+  // Additional fields that might be available for events
+  venue_name?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    postal?: string;
+    country?: string;
+  };
+  organizer?: {
+    name?: string;
+    url?: string;
+  };
+  performer?: any;
+  price_value?: number;
+  price_currency?: string;
+  availability?: string;
+  event_status?: string;
+  attendance_mode?: string;
+}
+
 // Default SEO data for the site
 export const defaultSEO: SEOData = {
   title: 'Новости Иркутска - Последние новости и события',
@@ -184,6 +205,85 @@ export const generateNewsArticleJSONLD = (article: NewsArticleData, baseUrl: str
   return jsonLd;
 };
 
+// Generate JSON-LD structured data for event
+export const generateEventJSONLD = (event: EventData, baseUrl: string = window.location.origin) => {
+  // Extract plain text description
+  const extractTextFromHTML = (html: string): string => {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || div.innerText || '';
+  };
+
+  const plainTextDescription = extractTextFromHTML(event.description);
+  
+  // Build location object
+  const locationObj: any = {
+    "@type": "Place",
+    "name": event.venue_name || event.location
+  };
+
+  // Add address if available
+  if (event.address) {
+    locationObj.address = {
+      "@type": "PostalAddress",
+      "addressLocality": event.address.city || event.location,
+      "addressCountry": event.address.country || "RU"
+    };
+    
+    if (event.address.street) {
+      locationObj.address.streetAddress = event.address.street;
+    }
+    if (event.address.postal) {
+      locationObj.address.postalCode = event.address.postal;
+    }
+  }
+
+  // Build organizer object
+  const organizerObj: any = {
+    "@type": "Organization",
+    "name": event.organizer?.name || "Новости Иркутска",
+    "url": event.organizer?.url || baseUrl
+  };
+
+  // Build offers object if price information is available
+  let offersObj = null;
+  if (event.price_value !== undefined) {
+    offersObj = {
+      "@type": "Offer",
+      "price": event.price_value.toString(),
+      "priceCurrency": event.price_currency || "RUB",
+      "availability": `https://schema.org/${event.availability || "InStock"}`,
+      "url": `${baseUrl}/?id=${event.id}`
+    };
+  }
+
+  const jsonLd: any = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "name": event.title,
+    "description": plainTextDescription.substring(0, 200),
+    "image": [event.image_url],
+    "startDate": event.datetime_iso,
+    "endDate": event.datetime_iso, // Use same date if no end date provided
+    "eventStatus": "https://schema.org/EventScheduled",
+    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+    "location": locationObj,
+    "organizer": organizerObj
+  };
+
+  // Add performer if available
+  if (event.performer) {
+    jsonLd.performer = event.performer;
+  }
+
+  // Add offers if available
+  if (offersObj) {
+    jsonLd.offers = offersObj;
+  }
+
+  return jsonLd;
+};
+
 // Generate JSON-LD structured data for article (legacy)
 export const generateArticleJSONLD = (article: ArticleSEOData) => {
   const jsonLd = {
@@ -274,6 +374,21 @@ export const removeJSONLD = (id: string) => {
   }
 };
 
+// Determine if content should be treated as an event
+export const isEventContent = (article: NewsArticleData | EventData): boolean => {
+  // Check if it has event-like characteristics
+  const eventKeywords = ['событие', 'мероприятие', 'концерт', 'выставка', 'семинар', 'мастер-класс', 'лекция', 'практика', 'йога', 'тренинг'];
+  const category = article.category?.toLowerCase() || '';
+  const title = article.title?.toLowerCase() || '';
+  const description = article.description?.toLowerCase() || '';
+  
+  return eventKeywords.some(keyword => 
+    category.includes(keyword) || 
+    title.includes(keyword) || 
+    description.includes(keyword)
+  );
+};
+
 // Convert news article data to SEO data
 export const newsArticleToSEOData = (article: NewsArticleData, baseUrl: string = window.location.origin): ArticleSEOData => {
   // Extract plain text from HTML description for meta description
@@ -288,15 +403,21 @@ export const newsArticleToSEOData = (article: NewsArticleData, baseUrl: string =
     ? plainTextDescription.substring(0, 160) + '...' 
     : plainTextDescription;
 
+  // Determine if this is event content for better title formatting
+  const isEvent = isEventContent(article);
+  const titleFormat = isEvent 
+    ? `${article.title} — ${article.location}, ${article.datetime_str}`
+    : `${article.title} — ${article.location}, ${article.datetime_str}`;
+
   return {
     id: article.id,
-    title: `${article.title} — ${article.location}, ${article.datetime_str}`,
+    title: titleFormat,
     description: metaDescription,
     content: article.description,
     excerpt: plainTextDescription,
     image: article.image_url || defaultSEO.image,
     url: `${baseUrl}/?id=${article.id}`,
-    type: 'article',
+    type: isEvent ? 'event' : 'article',
     author: 'Новости Иркутска',
     publishedTime: article.datetime_iso,
     modifiedTime: article.datetime_iso,
