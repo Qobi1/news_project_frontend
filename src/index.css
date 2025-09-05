@@ -359,3 +359,115 @@ footer .list-unstyled a {
 footer .list-unstyled a:hover {
   color: #ffeb3b !important;
 }
+
+/* Search Component Styles */
+.search-component {
+  position: relative;
+}
+
+.search-component .search-highlight {
+  background-color: #fff3cd;
+  padding: 0.1em 0.2em;
+  border-radius: 0.2em;
+  font-weight: 500;
+}
+
+.search-component .input-group:focus-within {
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  border-radius: 50px;
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+.search-component .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.search-component .spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Improved input focus states */
+.search-component .form-control:focus {
+  box-shadow: none;
+  border-color: transparent;
+  background-color: #fff;
+}
+
+.search-component .input-group-text {
+  transition: all 0.2s ease;
+}
+
+.search-component .input-group:focus-within .input-group-text {
+  background-color: #f8f9fa;
+  border-color: #007bff;
+}
+
+/* Search suggestions and history dropdown */
+.search-component .position-absolute {
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.search-component .position-absolute .btn-link {
+  color: #495057;
+  text-decoration: none;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.search-component .position-absolute .btn-link:hover {
+  background-color: #f8f9fa;
+  color: #007bff;
+}
+
+.search-component .position-absolute .btn-link:focus {
+  box-shadow: none;
+  background-color: #e9ecef;
+}
+
+/* Search results info */
+.search-component .text-muted {
+  font-size: 0.9rem;
+}
+
+/* Responsive adjustments for search */
+@media (max-width: 768px) {
+  .search-component .input-group {
+    flex-direction: column;
+  }
+  
+  .search-component .input-group .btn {
+    border-radius: 0 0 50px 50px;
+    margin-top: -1px;
+  }
+  
+  .search-component .position-absolute {
+    position: relative !important;
+    margin-top: 0.5rem;
+  }
+}
+
+/* Animation for search results */
+.search-result-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.search-result-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.search-result-exit {
+  opacity: 1;
+}
+
+.search-result-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 300ms, transform 300ms;
+}

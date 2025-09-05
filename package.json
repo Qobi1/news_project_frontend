@@ -14,6 +14,13 @@
     "ssr": "node scripts/ssrServer.js",
     "ssr:enhanced": "node scripts/enhancedSSRServer.js",
     "start": "npm run build && npm run ssr:enhanced",
-    "test:meta": "node scripts/testMetaTags.js"
+    "test:meta": "node scripts/testMetaTags.js",
+    "test:search": "node scripts/testSearchFunctionality.js",
+    "test:search-improvements": "node scripts/testSearchImprovements.js",
+    "test:simplified-search": "node scripts/testSimplifiedSearch.js",
+    "test:typing-fix": "node scripts/testTypingFix.js",
+    "test:simple-search": "node scripts/testSimpleSearch.js",
+    "test:typing-persistence": "node scripts/testTypingPersistence.js",
+    "test:input-after-sort": "node scripts/testInputAfterSort.js"
   }
 }

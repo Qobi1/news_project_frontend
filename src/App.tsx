@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import './index.css';
 import RandomNews from './RandomNews';
 import SEOHead from './SEOHead';
+import SearchComponent from './components/SearchComponent';
 import { NewsArticleData, EventData } from './seo';
 import { updateMetaTagsForArticle } from './utils/enhancedMetaTags';
+import { ICONS, getIconClass } from './utils/iconConfig';
 
 interface NewsArticle {
   id: number;
@@ -24,6 +26,9 @@ const App: React.FC = () => {
   const [filteredArticles, setFilteredArticles] = useState<NewsArticle[]>([]);
   const [displayedArticles, setDisplayedArticles] = useState<NewsArticle[]>([]);
   const [articlesToShow, setArticlesToShow] = useState(8);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<NewsArticle[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const [contactForm, setContactForm] = useState({
     name: '',
     email: '',
@@ -207,11 +212,118 @@ const App: React.FC = () => {
     return isNaN(date.getTime()) ? '' : date.toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
+  // Handle search functionality
+  const handleSearch = async (query: string = searchTerm) => {
+    if (!query.trim()) {
+      // If search is empty, show all articles
+      setHasSearched(false);
+      setSearchResults([]);
+      setSelectedCategory('Все');
+      handleCategoryClick('Все');
+      return;
+    }
+
+    setIsSearching(true);
+    setHasSearched(true);
+    
+    try {
+      // Try backend search API first
+      const response = await fetch(`${backendUrl}/search/?q=${encodeURIComponent(query)}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        const searchResults = data.map(mapApiNewsToArticle);
+        setSearchResults(searchResults);
+        setNewsData(searchResults);
+        setSelectedCategory('Поиск');
+      } else {
+        // Fallback to client-side search if backend search fails
+        console.warn('Backend search failed, using client-side search');
+        performClientSideSearch(query);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      // Fallback to client-side search
+      performClientSideSearch(query);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Client-side search fallback
+  const performClientSideSearch = async (query: string) => {
+    try {
+      // Fetch all articles for client-side search
+      const response = await fetch(`${backendUrl}/news/`);
+      const allArticles = await response.json();
+      const mappedArticles = allArticles.map(mapApiNewsToArticle);
+      
+      // Filter articles based on search query
+      const filtered = mappedArticles.filter(article => 
+        article.title.toLowerCase().includes(query.toLowerCase()) ||
+        article.excerpt.toLowerCase().includes(query.toLowerCase()) ||
+        article.category.toLowerCase().includes(query.toLowerCase()) ||
+        article.author.toLowerCase().includes(query.toLowerCase())
+      );
+      
+      setSearchResults(filtered);
+      setNewsData(filtered);
+      setSelectedCategory('Поиск');
+    } catch (error) {
+      console.error('Client-side search error:', error);
+      setError('Ошибка поиска. Попробуйте позже.');
+    }
+  };
+
+  // Handle search input change with debouncing
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    
+    // Clear search if input is empty
+    if (!value.trim()) {
+      setHasSearched(false);
+      setSearchResults([]);
+      setSelectedCategory('Все');
+      handleCategoryClick('Все');
+    }
+  };
+
+  // Handle search form submission
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSearch();
+  };
+
+  // Handle Enter key press in search input
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
+
+  // Clear search
+  const clearSearch = () => {
+    setSearchTerm('');
+    setHasSearched(false);
+    setSearchResults([]);
+    setSelectedCategory('Все');
+    handleCategoryClick('Все');
+  };
+
   // Handle category click
   const handleCategoryClick = (category: string) => {
     setSelectedCategory(category);
     setArticlesToShow(8);
     setLoading(true);
+    
+    // Clear search when switching categories
+    if (category !== 'Поиск') {
+      setHasSearched(false);
+      setSearchResults([]);
+    }
+    
     if (category === 'Все') {
       fetch(`${backendUrl}/news/`)
         .then(res => res.json())
@@ -223,11 +335,14 @@ const App: React.FC = () => {
           setError(e.message);
           setLoading(false);
         });
+    } else if (category === 'Поиск') {
+      // Don't fetch new data for search category, use existing search results
+      setLoading(false);
     } else {
       fetch(`${backendUrl}/filter/?category=${encodeURIComponent(category)}`)
         .then(res => res.json())
         .then(data => {
-          console.log('Filtered news response:', data); // <-- Add this line
+          console.log('Filtered news response:', data);
           setNewsData(data.map(mapApiNewsToArticle));
           setLoading(false);
         })
@@ -261,7 +376,7 @@ const App: React.FC = () => {
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow">
           <div className="container">
             <a className="navbar-brand fw-bold fs-3" href="#" onClick={handleBackToHome}>
-              <i className="bi bi-newspaper me-2"></i>Новости
+              <i className={getIconClass('BRAND', 'LG') + ' me-2'}></i>Новости
             </a>
           </div>
         </nav>
@@ -284,7 +399,7 @@ const App: React.FC = () => {
               className="btn btn-outline-primary mb-4"
               onClick={handleBackToHome}
             >
-              <i className="bi bi-arrow-left me-2"></i>Назад на главную
+              <i className={getIconClass('BACK', 'SM') + ' me-2'}></i>Назад на главную
             </button>
             <article className="bg-white rounded shadow-sm overflow-hidden">
               <div className="p-4 p-lg-5">
@@ -293,15 +408,15 @@ const App: React.FC = () => {
                   <h1 className="display-5 fw-bold mb-3">{currentArticle.title}</h1>
                   <div className="d-flex flex-wrap align-items-center text-muted mb-3">
                     <div className="me-4 mb-2">
-                      <i className="bi bi-calendar me-2"></i>
+                      <i className={getIconClass('CALENDAR', 'SM') + ' me-2'}></i>
                       {formatDate(currentArticle.date)}
                     </div>
                     <div className="me-4 mb-2">
-                      <i className="bi bi-person me-2"></i>
+                      <i className={getIconClass('PERSON', 'SM') + ' me-2'}></i>
                       {currentArticle.author}
                     </div>
                     <div className="mb-2">
-                      <i className="bi bi-clock me-2"></i>
+                      <i className={getIconClass('CLOCK', 'SM') + ' me-2'}></i>
                       5 мин чтения
                     </div>
                   </div>
@@ -334,7 +449,7 @@ const App: React.FC = () => {
             <div className="row">
               <div className="col-lg-4 mb-4">
                 <h5 className="fw-bold mb-3" style={{color: '#ffeb3b'}}>
-                  <i className="bi bi-newspaper me-2"></i>Новости
+                  <i className={getIconClass('BRAND', 'MD') + ' me-2'}></i>Новости
                 </h5>
                 <p className="text-muted" style={{color: '#fff'}}>
                   Ваш надежный источник достоверных новостей и подробного анализа.
@@ -396,7 +511,7 @@ const App: React.FC = () => {
       <nav className="navbar navbar-expand-lg sticky-top shadow">
         <div className="container d-flex align-items-center justify-content-between">
           <a className="navbar-brand fw-bold" href="#home">
-            <i className="bi bi-newspaper me-2"></i>Новости
+            <i className={getIconClass('BRAND', 'MD') + ' me-2'}></i>Новости
           </a>
           <div className="d-flex gap-2">
             <button className="nav-link btn btn-gradient" onClick={() => handleSmoothScroll('home')}>Главная</button>
@@ -420,7 +535,7 @@ const App: React.FC = () => {
                 className="btn btn-light btn-lg fade-in shadow-lg px-4 py-2 rounded-pill"
                 onClick={() => handleSmoothScroll('news')}
               >
-                Смотреть последние новости <i className="bi bi-arrow-down ms-2"></i>
+                Смотреть последние новости <i className={getIconClass('DOWN', 'SM') + ' ms-2'}></i>
               </button>
             </div>
             <div className="col-lg-4 text-center">
@@ -445,20 +560,17 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="row mb-4">
-            <div className="col-lg-6 mx-auto">
-              <div className="input-group shadow rounded-pill overflow-hidden">
-                <span className="input-group-text bg-white border-0">
-                  <i className="bi bi-search"></i>
-                </span>
-                <input
-                  type="text"
-                  className="form-control border-0"
-                  placeholder="Поиск новостных статей..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{background: 'transparent'}}
-                />
-              </div>
+            <div className="col-lg-8 mx-auto">
+              <SearchComponent
+                onSearch={handleSearch}
+                onClear={clearSearch}
+                isLoading={isSearching}
+                hasSearched={hasSearched}
+                resultsCount={searchResults.length}
+                searchTerm={searchTerm}
+                placeholder="Поиск новостных статей..."
+                className="search-main"
+              />
             </div>
           </div>
           <div className="row">
@@ -481,11 +593,11 @@ const App: React.FC = () => {
                     <div className="mt-auto">
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <small className="text-muted">
-                          <i className="bi bi-calendar me-1"></i>
+                          <i className={getIconClass('CALENDAR', 'XS') + ' me-1'}></i>
                           {formatDateSafe(article.date)}
                         </small>
                         <small className="text-muted">
-                          <i className="bi bi-person me-1"></i>
+                          <i className={getIconClass('PERSON', 'XS') + ' me-1'}></i>
                           {article.author}
                         </small>
                       </div>
@@ -493,7 +605,7 @@ const App: React.FC = () => {
                         className="btn btn-primary w-100 rounded-pill fw-bold"
                         onClick={() => handleReadMore(article)}
                       >
-                        Читать далее <i className="bi bi-arrow-right ms-1"></i>
+                        Читать далее <i className={getIconClass('FORWARD', 'XS') + ' ms-1'}></i>
                       </button>
                     </div>
                   </div>
@@ -502,9 +614,37 @@ const App: React.FC = () => {
             ))}
             {newsData.length === 0 && (
               <div className="col-12 text-center py-5">
-                <i className="bi bi-search display-1 text-muted"></i>
-                <h3 className="mt-3 text-muted">Статьи не найдены</h3>
-                <p className="text-muted">Попробуйте изменить критерии поиска.</p>
+                <i className={getIconClass(hasSearched ? 'SEARCH' : 'NEWS', 'DISPLAY', 'MUTED')}></i>
+                <h3 className="mt-3 text-muted">
+                  {hasSearched ? 'По вашему запросу ничего не найдено' : 'Статьи не найдены'}
+                </h3>
+                <p className="text-muted">
+                  {hasSearched ? (
+                    <>
+                      Попробуйте изменить поисковый запрос или{' '}
+                      <button 
+                        className="btn btn-link p-0 text-decoration-none" 
+                        onClick={clearSearch}
+                        style={{color: '#007bff'}}
+                      >
+                        очистить поиск
+                      </button>
+                    </>
+                  ) : (
+                    'Попробуйте изменить критерии поиска.'
+                  )}
+                </p>
+                {hasSearched && (
+                  <div className="mt-4">
+                    <button 
+                      className="btn btn-outline-primary"
+                      onClick={clearSearch}
+                    >
+                      <i className={getIconClass('BACK', 'SM') + ' me-2'}></i>
+                      Показать все новости
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -523,12 +663,30 @@ const App: React.FC = () => {
           {/* Category Buttons after news list */}
           <div className="row mt-4">
             <div className="col-12 d-flex flex-wrap gap-2 justify-content-center">
+              {/* Add search category if we have search results */}
+              {hasSearched && (
+                <button
+                  className={`btn btn-outline-primary btn-sm rounded-pill ${selectedCategory === 'Поиск' ? 'active' : ''}`}
+                  style={{
+                    background: selectedCategory === 'Поиск' ? '#007bff' : '',
+                    color: selectedCategory === 'Поиск' ? 'white' : '#007bff',
+                    fontWeight: selectedCategory === 'Поиск' ? 'bold' : 'normal'
+                  }}
+                  onClick={() => handleCategoryClick('Поиск')}
+                >
+                  <i className={getIconClass('SEARCH', 'SM') + ' me-1'}></i>
+                  Поиск ({searchResults.length})
+                </button>
+              )}
+              
+              {/* Regular categories */}
               {categories.map(cat => (
                 <button
                   key={cat}
                   className={`btn btn-outline-secondary btn-sm rounded-pill ${selectedCategory === cat ? 'active' : ''}`}
                   style={{
-                    background: selectedCategory === cat ? '#e0e0e0' : '',
+                    background: selectedCategory === cat ? '#6c757d' : '',
+                    color: selectedCategory === cat ? 'white' : '#6c757d',
                     fontWeight: selectedCategory === cat ? 'bold' : 'normal'
                   }}
                   onClick={() => handleCategoryClick(cat)}
@@ -577,7 +735,7 @@ const App: React.FC = () => {
           <div className="row">
             <div className="col-lg-4 mb-4">
               <h5 className="fw-bold mb-3" style={{color: '#ffeb3b'}}>
-                <i className="bi bi-newspaper me-2"></i>Новости
+                <i className={getIconClass('BRAND', 'MD') + ' me-2'}></i>Новости
               </h5>
               <p className="mb-3">
                 Ваш надежный источник достоверных новостей и подробного анализа.
