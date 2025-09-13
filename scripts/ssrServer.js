@@ -20,7 +20,7 @@ const mockArticles = {
     datetime_iso: "2025-09-02T19:00:00",
     location: "Центр Старшилова Человека",
     description: "<p>Центр йоги «Центр Старшилова Человека» приглашает всех желающих на мастер-класс «Целительное дыхание».</p>",
-    image_url: "https://static.irk.ru/media/img/site/gallery/30722/f06cc952-d7dc-4ce5-a958-aadaf17631c7_jpg_280x190_crop_q85.jpg",
+    image_url: "/api/placeholder/280/190",
     category: "практика"
   },
   2: {

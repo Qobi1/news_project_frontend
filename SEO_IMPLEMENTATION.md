@@ -46,7 +46,7 @@ This implementation provides comprehensive SEO optimization for the news website
   "publisher": {
     "@type": "Organization",
     "name": "Новости Иркутска",
-    "url": "https://news.irk.ru"
+    "url": "/"
   },
   "articleSection": "Category",
   "keywords": "category, location, новости иркутска",
@@ -67,19 +67,19 @@ This implementation provides comprehensive SEO optimization for the news website
       "@type": "ListItem",
       "position": 1,
       "name": "Главная",
-      "item": "https://news.irk.ru"
+      "item": "/"
     },
     {
       "@type": "ListItem",
       "position": 2,
       "name": "Category",
-      "item": "https://news.irk.ru/?category=Category"
+      "item": "/?category=Category"
     },
     {
       "@type": "ListItem",
       "position": 3,
       "name": "Article Title",
-      "item": "https://news.irk.ru/?id=1"
+      "item": "/?id=1"
     }
   ]
 }
@@ -91,10 +91,10 @@ This implementation provides comprehensive SEO optimization for the news website
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "Новости Иркутска",
-  "url": "https://news.irk.ru",
+  "url": "/",
   "potentialAction": {
     "@type": "SearchAction",
-    "target": "https://news.irk.ru/?search={search_term_string}",
+    "target": "/?search={search_term_string}",
     "query-input": "required name=search_term_string"
   }
 }

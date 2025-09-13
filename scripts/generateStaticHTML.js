@@ -13,7 +13,7 @@ const mockArticles = [
     datetime_iso: "2025-09-02T19:00:00",
     location: "Центр Старшилова Человека",
     description: "<p>Центр йоги «Центр Старшилова Человека» приглашает всех желающих на мастер-класс «Целительное дыхание».</p>",
-    image_url: "https://static.irk.ru/media/img/site/gallery/30722/f06cc952-d7dc-4ce5-a958-aadaf17631c7_jpg_280x190_crop_q85.jpg",
+    image_url: "/api/placeholder/280/190",
     category: "практика"
   },
   {
@@ -51,7 +51,7 @@ function generateArticleMetaTags(article) {
     : plainTextDescription;
 
   const title = `${article.title} — ${article.location}, ${article.datetime_str}`;
-  const url = `https://news.irk.ru/?id=${article.id}`;
+  const url = `/?id=${article.id}`;
 
   return {
     title: escapeHtml(title),
@@ -84,16 +84,16 @@ function generateArticleJSONLD(article) {
     "author": {
       "@type": "Organization",
       "name": "Новости Иркутска",
-      "url": "https://news.irk.ru"
+      "url": "/"
     },
     "publisher": {
       "@type": "Organization",
       "name": "Новости Иркутска",
-      "url": "https://news.irk.ru"
+      "url": "/"
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": `https://news.irk.ru/?id=${article.id}`
+      "@id": `/?id=${article.id}`
     },
     "articleSection": article.category,
     "keywords": [article.category, article.location, "новости иркутска"].join(", "),
